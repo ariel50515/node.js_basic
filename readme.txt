@@ -6,6 +6,8 @@ res.render()
 
 res.json()
 
+res.redirect()
+
 -----
 RESTful API
 
