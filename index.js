@@ -28,11 +28,19 @@ app.use(session({
 }));
 app.use(express.urlencoded({extended: false}));
 app.use(express.json());
+
+app.use((req, res, next)=>{
+    // 自己定義的 template helper functions
+    res.locals.toDateString = (d)=> moment(d).format('YYYY-MM-DD');
+    res.locals.toDatetimeString = (d)=> moment(d).format('YYYY-MM-DD  HH:mm:ss');
+
+    next();
+});
+
 // routes
 app.get("/", (req, res) => {
     // res.send(`<h2>泥好</h2>`);
-
-    res.render("main", { name: "Shinder" })
+    res.render("main", { name: "ariel" })
 });
 
 app.get("/sales-json", (req, res) => {

@@ -1,35 +1,61 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const db = require(__dirname + "/../modules/db_connect2");
+const db = require(__dirname + '/../modules/db_connect2');
 
 
 router.use((req, res, next)=>{
     next();
 });
-// CRUD
 
-router.get('/', async (req, res)=>{
-    const perPage = 20;
-    let page = +req.query.page || 1;
-    if(page<1){
-        return res.redirect(req.baseUrl);
+
+// router.get(['/', '/list'], async (req, res)=>{
+    async function getListData(req) {
+        const perPage = 20;
+        let page = + req.query.page || 1;
+        if(page<1){
+            return res.redirect(req.baseUrl);
     }
-    const t_sql = "SELECT COUNT(1) totalRows FROM address_book";
+    
+    let search = req.query.search ? req.query.search.trim() : '';
+    let where = ` WHERE 1 `; // 1代表true，為了接後面的資料
+    if(search) {
+        // where += `AND \`name\` LIKE ${db.escape('%' + search + '%')} `;
+        where += `AND
+        (
+            \`name\` LIKE ${db.escape('%' + search + '%')}
+            OR
+            \`address\` LIKE ${db.escape('%' + search + '%')}
+
+        )`;
+    }
+    // res.type("text/plain; charset=utf-8");
+    // return res.end(where);
+
+    const t_sql = `SELECT COUNT(1) totalRows FROM address_book ${where}`;
     const [[{totalRows}]] = await db.query(t_sql);
 
     let totalPages = 0;
-    let rows = [] //不能用const
+    let rows = [];
     if(totalRows>0){
         totalPages = Math.ceil(totalRows/perPage);
         if(page>totalPages) {
             return res.redirect(`?page=${totalPages}`);
         }
+        const sql = `SELECT * FROM address_book ${where} ORDER BY sid DESC LIMIT ${(page-1)*perPage}, ${perPage} `;
+        [rows] = await db.query(sql);
     }
+    // res.json({totalRows, totalPages, perPage, page, rows});
+    return{totalRows, totalPages, perPage, page, rows, search, query: req.query};
+}
 
-    const sql = `SELECT * FROM address_book ORDER BY sid DESC LIMIT ${(page-1)*perPage}, ${perPage}`;
-    [rows] = await db.query(sql);
+    //CRUD
+router.get(["/", "/list"], async (req, res) => {
+    const data = await getListData(req);
+    res.render("address-book/list", data);
+});
 
-    res.json({totalRows, totalPages, perPage, page, rows});
+router.get(["/", "/list"], async (req, res) => {
+    res.json(await getListData(req));
 });
 
 module.exports = router;
