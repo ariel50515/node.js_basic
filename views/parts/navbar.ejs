@@ -26,8 +26,23 @@
                     <li class="nav-item">
                         <a class="nav-link" href="/logout">登出</a>
                     </li>
-                    <% } %>
+                    <% } else { %>
+                        <li class="nav-item">
+                            <a class="nav-link">訪客</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/fake-login">登入</a>
+                        </li>
+                    <% }%>
                 </ul>
+                <!-- <ul class="navbar-nav mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link">登入</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout">登出</a>
+                    </li>
+                </ul> -->
             </div>
         </div>
     </nav>

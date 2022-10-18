@@ -45,7 +45,7 @@ app.use((req, res, next)=>{
     res.locals.toDatetimeString = (d)=> moment(d).format('YYYY-MM-DD  HH:mm:ss');
     
     res.locals.title = '艾瑞兒的網站';
-    res.locals.session = 'req.session';
+    res.locals.session = req.session;
     next();
 });
 
