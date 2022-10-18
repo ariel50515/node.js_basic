@@ -5,6 +5,7 @@ const MysqlStore = require("express-mysql-session")(session);
 const moment = require("moment-timezone");
 const db = require(__dirname + "/modules/db_connect2");
 const sessionStore = new MysqlStore({}, db);
+const cors = require("cors");
 
 express.ariel = "哈囉";
 // const multer = require("multer");
@@ -17,6 +18,15 @@ const app = express();
 app.set("view engine", "ejs");
 
 // top-level middleware
+const corsOptions = {
+    credentials: true,
+    origin: function (origin, callback) {
+        console.log({origin});
+        callback(null, true);
+    }
+};
+app.use(cors(corsOptions));
+
 app.use(session({
     saveUninitialized: false,
     resave: false,
@@ -33,7 +43,9 @@ app.use((req, res, next)=>{
     // 自己定義的 template helper functions
     res.locals.toDateString = (d)=> moment(d).format('YYYY-MM-DD');
     res.locals.toDatetimeString = (d)=> moment(d).format('YYYY-MM-DD  HH:mm:ss');
-
+    
+    res.locals.title = '艾瑞兒的網站';
+    res.locals.session = 'req.session';
     next();
 });
 
@@ -176,6 +188,19 @@ app.get("/try-db-add2", async (req, res)=>{
 });
 
 app.use("/ab",  require(__dirname + "/routes/address-book") );
+
+app.get("/fake-login", (req, res) => {
+    req.session.admin = {
+        id: 12,
+        account: "ariel",
+        nickname: "oreo"
+    };
+    res.redirect("/");
+});
+app.get("/logout", (req, res) => {
+    delete req.session.admin;
+    res.redirect("/");
+});
 
 // ------------------------------------------------
 app.use(express.static("public"));
