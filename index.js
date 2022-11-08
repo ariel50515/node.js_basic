@@ -1,22 +1,24 @@
-require("dotenv").config();
-const express = require("express");
-const session = require("express-session");
-const MysqlStore = require("express-mysql-session")(session);
-const moment = require("moment-timezone");
-const db = require(__dirname + "/modules/db_connect2");
+require('dotenv').config();
+const express = require('express');
+const session = require('express-session');
+const MysqlStore = require('express-mysql-session')(session);
+const moment = require('moment-timezone');
+const db = require(__dirname + '/modules/db_connect2');
 const sessionStore = new MysqlStore({}, db);
-const cors = require("cors");
+const cors = require('cors');
 const axios = require('axios');
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
 
-express.ariel = "哈囉";
-// const multer = require("multer");
-// const upload = multer({dest: "tmp_uploads/"});
-const upload = require(__dirname + "/modules/upload-img");
-const fs = require("fs").promises;
+express.ariel = '哈囉';
+// const multer = require('multer');
+// const upload = multer({dest: 'tmp_uploads/'});
+const upload = require(__dirname + '/modules/upload-img');
+const fs = require('fs').promises;
 
 const app = express();
 
-app.set("view engine", "ejs");
+app.set('view engine', 'ejs');
 
 // top-level middleware
 const corsOptions = {
@@ -31,7 +33,7 @@ app.use(cors(corsOptions));
 app.use(session({
     saveUninitialized: false,
     resave: false,
-    secret: "dkddtgHSFDFJG045", //sever端的加密解密，長度不要太短
+    secret: 'dkddtgHSFDFJG045', //sever端的加密解密，長度不要太短
     store: sessionStore,
     cookie:{
         maxAge: 1_200_000
@@ -51,89 +53,89 @@ app.use((req, res, next)=>{
 });
 
 // routes
-app.get("/", (req, res) => {
+app.get('/', (req, res) => {
     // res.send(`<h2>泥好</h2>`);
-    res.render("main", { name: "ariel" })
+    res.render('main', { name: 'ariel' })
 });
 
-app.get("/sales-json", (req, res) => {
-    const sales = require(__dirname + "/data/sales");
+app.get('/sales-json', (req, res) => {
+    const sales = require(__dirname + '/data/sales');
     console.log(sales);
     res.render(`sales-json`, {sales});
 });
 
-app.get("/json-test", (req, res) => {
-    // res.send({ name: "小新1", age: 30 });
-    res.json({ name: "小新2", age: 30 });
+app.get('/json-test', (req, res) => {
+    // res.send({ name: 'oreo', age: 30 });
+    res.json({ name: 'Ariel', age: 30 });
 });
 
-app.get("/try-qs", (req, res) => {
+app.get('/try-qs', (req, res) => {
     res.json(req.query);
 });
 
-app.post("/try-post", (req, res) => {
+app.post('/try-post', (req, res) => {
     res.json(req.body);
 });
 
-app.get("/try-post-form", (req, res) => {
-    // res.render("try-post-form", {email:"", password:""});
-    res.render("try-post-form");
+app.get('/try-post-form', (req, res) => {
+    // res.render('try-post-form', {email:'', password:''});
+    res.render('try-post-form');
 });
 
-app.post("/try-post-form", (req, res) => {
-    res.render("try-post-form", req.body);
+app.post('/try-post-form', (req, res) => {
+    res.render('try-post-form', req.body);
 });
 
-app.post("/try-upload", upload.single("avatar"), async (req, res) => {
+app.post('/try-upload', upload.single('avatar'), async (req, res) => {
     res.json(req.file);
     /*
     if(req.file && req.file.originalname){
         await fs.rename(req.file.path, `public/imgs/${req.file.originalname}`);
         res.json(req.file);
     } else {
-        res.json({msg:"沒有上傳檔案"});
+        res.json({msg:'沒有上傳檔案'});
     }
     */
 });
 
-app.post("/try-upload2", upload.array("photos"), async (req, res) => {
+app.post('/try-upload2', upload.array('photos'), async (req, res) => {
     res.json(req.files);
 });
 
-app.get("/my-params1/:action?/:id?", async (req,res) => {
+app.get('/my-params1/:action?/:id?', async (req,res) => {
     res.json(req.params);
 });
 
-app.use(express.static("public"));
-app.use(express.static("node_modules/bootstrap/dist"));
+app.use(express.static('public'));
+app.use(express.static('node_modules/bootstrap/dist'));
 
 app.get(/^\/m\/09\d{2}-?\d{3}-?\d{3}$/i, (req, res) => {
     let u = req.url.slice(3);
-    u = u.split("?")[0]; // 去掉 query string
-    u = u.split("-").join("");
+    u = u.split('?')[0]; // 去掉 query string
+    u = u.split('-').join('');
     res.json({mobile: u});
 });
 
-app.use("/admin2", require(__dirname + "/routes/admin2"));
+app.use('/admin2', require(__dirname + '/routes/admin2'));
 
 const myMiddle = (req, res, next) => {
-    res.locals = {...res.locals, ariel:"hello"};
+    res.locals = {...res.locals, ariel:'hello'};
     res.locals.derrr = 567;
-    // res.myPersonal = {...res.locals, shinder:"哈囉"}; // 不建議
+    // res.myPersonal = {...res.locals, shinder:'哈囉'}; // 不建議
     next();
 };
 
-app.get("/try-middle", [myMiddle], (req, res) => {
+app.get('/try-middle', [myMiddle], (req, res) => {
     res.json(res.locals);
 });
 
-app.get("/try-session", (req, res)=>{
+app.get('/try-session', (req, res)=>{
     req.session.aaa ||= 0; // 預設值 php會是布林值，JS不是
     req.session.aaa++;
     res.json(req.session);
 });
 
-app.get("/try-date", (req, res) => {
+app.get('/try-date', (req, res) => {
     const now = new Date;
     const m = moment();
 
@@ -142,32 +144,32 @@ app.get("/try-date", (req, res) => {
         t2: now.toString(),
         t3: now.toDateString(),
         t4: now.toLocaleString(),
-        m:m.format("YYYY-MM-DD HH:mm:ss")
+        m:m.format('YYYY-MM-DD HH:mm:ss')
     });
 });
 
-app.get("/try-moment", (req, res)=>{
-    const fm = "YYYY-MM-DD HH:mm:ss";
-    const m = moment("06/10/22", "DD/MM/YY");
+app.get('/try-moment', (req, res)=>{
+    const fm = 'YYYY-MM-DD HH:mm:ss';
+    const m = moment('06/10/22', 'DD/MM/YY');
     res.json({
         m,
         m1: m.format(fm),
-        m2: m.tz("Europe/London").format(fm)
+        m2: m.tz('Europe/London').format(fm)
     });
 });
 
-app.get("/try-db", async (req, res) => {
-    const [rows] = await db.query("SELECT * FROM address_book LIMIT 5")
+app.get('/try-db', async (req, res) => {
+    const [rows] = await db.query('SELECT * FROM address_book LIMIT 5')
     res.json(rows);
 });
 
-app.get("/try-db-add", async (req, res)=>{
-    const name = "艾瑞兒";
-    const email = "ariel@gmail.com";
-    const mobile = "0918555666";
-    const birthday = "2005-10-27";
-    const address = "台北市";
-    const sql = "INSERT INTO `address_book`(`name`, `email`, `mobile`, `birthday`, `address`, `created_at`) VALUES (?, ?, ?, ?, ?, NOW())";
+app.get('/try-db-add', async (req, res)=>{
+    const name = '艾瑞兒';
+    const email = 'ariel@gmail.com';
+    const mobile = '0918555666';
+    const birthday = '2005-10-27';
+    const address = '台北市';
+    const sql = 'INSERT INTO `address_book`(`name`, `email`, `mobile`, `birthday`, `address`, `created_at`) VALUES (?, ?, ?, ?, ?, NOW())';
 
     const [result] = await db.query(sql, [name, email, mobile, birthday, address]);
     res.json(result);
@@ -176,31 +178,31 @@ app.get("/try-db-add", async (req, res)=>{
     // res.json({insertId, affectRows});
 });
 
-app.get("/try-db-add2", async (req, res)=>{
-    const name = "林克";
-    const email = "link@gmail.com";
-    const mobile = "0918555666";
-    const birthday = "1998-10-27";
-    const address = "宜蘭縣";
-    const sql = "INSERT INTO `address_book` SET ?";
+app.get('/try-db-add2', async (req, res)=>{
+    const name = 'yonna';
+    const email = 'link@gmail.com';
+    const mobile = '0918555666';
+    const birthday = '1998-10-27';
+    const address = '宜蘭縣';
+    const sql = 'INSERT INTO `address_book` SET ?';
 
     const [result] = await db.query(sql, [{name, email, mobile, birthday, address, created_at: new Date()}]);
     res.json(result);
 });
 
-app.use("/ab",  require(__dirname + "/routes/address-book") );
+app.use('/ab',  require(__dirname + '/routes/address-book') );
 
-app.get("/fake-login", (req, res) => {
+app.get('/fake-login', (req, res) => {
     req.session.admin = {
         id: 12,
-        account: "ariel",
-        nickname: "oreo"
+        account: 'ariel',
+        nickname: 'oreo'
     };
-    res.redirect("/");
+    res.redirect('/');
 });
-app.get("/logout", (req, res) => {
+app.get('/logout', (req, res) => {
     delete req.session.admin;
-    res.redirect("/");
+    res.redirect('/');
 });
 
 app.get('/yahoo', async (req, res)=>{
@@ -209,7 +211,7 @@ app.get('/yahoo', async (req, res)=>{
 });
 
 app.get('/cate', async (req, res)=>{
-    const [rows] = await db.query("SELECT * FROM categories");
+    const [rows] = await db.query('SELECT * FROM categories');
 
     const firsts = [];
     for(let i of rows){
@@ -233,7 +235,7 @@ app.get('/cate', async (req, res)=>{
 
 
 app.get('/cate2', async (req, res)=>{
-    const [rows] = await db.query("SELECT * FROM categories");
+    const [rows] = await db.query('SELECT * FROM categories');
 
     const dict = {};
     // 編輯字典
@@ -260,14 +262,44 @@ app.get('/cate2', async (req, res)=>{
     res.json(firsts);
 });
 
+app.post('/login-api', async (req, res) => {
+    const output = {
+        success: false,
+        error: '密碼錯誤',
+        postData: req.body, //除錯用
+        auth: {}
+    };
+
+    const sql = "SELECT * FROM admins WHERE account=?";
+    const [rows] = await db.query(sql, [req.body.account]);
+
+    if(! rows.length){
+        return res.json(output);
+    }
+    const row = rows[0];
+
+    output.success = await bcrypt.compare(req.body.password, row['password_hash']);
+    if(output.success){
+        output.error = '';
+        const {sid, account, admin_group} = row;
+        const token = jwt.sign({sid, account, admin_group}, process.env.JWT_SECRET);
+        output.auth = {
+            sid,
+            account,
+            token
+        }
+    } 
+    res.json(output);
+});
+
 // ------------------------------------------------
-app.use(express.static("public"));
-app.use(express.static("node_modules/bootstrap/dist"));
+app.use(express.static('public'));
+app.use(express.static('node_modules/bootstrap/dist'));
 // ------------------------------------------------
 
 app.use((req, res) => {
-    // res.type("text/plain"); // 純文字
-    res.status(404).render("404")
+    // res.type('text/plain'); // 純文字
+    res.status(404).render('404')
 });
 
 const port = process.env.SERVER_PORT || 3002;
