@@ -42,13 +42,25 @@ app.use(session({
 app.use(express.urlencoded({extended: false}));
 app.use(express.json());
 
-app.use((req, res, next)=>{
+app.use(async (req, res, next)=>{
     // 自己定義的 template helper functions
     res.locals.toDateString = (d)=> moment(d).format('YYYY-MM-DD');
     res.locals.toDatetimeString = (d)=> moment(d).format('YYYY-MM-DD  HH:mm:ss');
     
     res.locals.title = '艾瑞兒的網站';
     res.locals.session = req.session;
+    res.locals.auth = {}; // 預設值
+
+    let auth = req.get('Authorization');
+
+    if(auth && auth.indexOf('Bearer ')===0){
+        auth = auth.slice(7);
+        try{
+            const payload = await jwt.verify(auth, process.env.JWT_SECRET);
+            res.locals.auth = payload;
+        }catch(ex){}
+    }
+    
     next();
 });
 
